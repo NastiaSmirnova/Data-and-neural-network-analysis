@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Определение калорий</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+		.container {
+			width: 500px;
+			margin: 20px auto 0;
+		}
+
+		.chous {
+			width: 180px;
+			height: 50px;
+			border-radius: 4px;
+			text-align: center;
+			margin: 25px auto;
+			cursor: pointer;
+			display: block;
+			font: 14px/50px Tahoma;
+			transition: all 0.18s ease-in-out;
+			border: 1px solid #4FD666;
+			background: linear-gradient(to top right, #3EC97A, #69EA49 20%, rgba(255, 255, 255, 0) 80%, rgba(255, 255, 255, 0)) top right/500% 500%;
+			color: #4FD666;
+		}
+
+		.chous:hover {
+			color: white;
+			background-position: bottom left;
+		}
+
+		.my {
+			width: 0.1px;
+			height: 0.1px;
+			opacity: 0;
+			overflow: hidden;
+			position: absolute;
+			z-index: -1;
+		}
+
+		.response {
+			font-family: 'Montserrat', sans-serif;
+			font-weight: 600;
+			margin: 0 auto;
+			font-size: 48px;
+			color: #65BD15;
+			display: none;
+			text-align: center;
+		}
+
+		.red {
+			color: #D38961;
+		}
+
+		.pending {
+			font-family: 'Montserrat', sans-serif;
+			font-weight: 600;
+			margin: 0 auto;
+			font-size: 28px;
+			color: #65BD15;
+			display: none;
+			text-align: center;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="dada">
+		<label for="myfile" class="chous">Выберите файлы</label>
+		<input type="file" class="my" id="myfile" name="myfile" multiple="multiple" />
+	</div>
+	<div class="response">
+		<span id="category"></span> - <span class="red"><span id="value"></span> calories</span>
+	</div>
+	<div class="pending" id="pending">Загрузка...</div>
+	<div class="" id="cont" style="padding-top: 20px; display: flex; justify-content: space-evenly"></div>
+</body>
+<script>
+	const inputElement = document.getElementById("myfile");
+	inputElement.addEventListener("change", handleFile, false);
+
+	function handleFile() {
+		const fileList = this.files;
+
+		//add img to html
+		showOriginalImage(fileList[0]);
+
+		//send img to server
+		const formData = new FormData();
+		formData.append("image", fileList[0]);
+
+		const pendingSpan = document.getElementById("pending");
+		pendingSpan.style.display = "block";
+
+		const responseDiv = document.querySelector(".response");
+		responseDiv.style.display = "none";
+
+		let promise = new Promise(function (resolve, reject) {
+			$.ajax({
+				type: "POST",
+				contentType: false,
+				processData: false,
+				cache: false,
+				url: window.location.href + "handle_img",
+				data: formData,
+				success: function (data) {
+					resolve(data);
+				},
+				error: function (err) {
+					reject(err);
+				}
+			});
+		});
+
+		promise.then(function (data) {
+			console.log();
+			const response = JSON.parse(data);
+			const category = document.getElementById('category');
+			const value = document.getElementById('value');
+			category.innerHTML = response.name;
+			value.innerHTML = response.calories;
+			pendingSpan.style.display = "none";
+			responseDiv.style.display = "block";
+		}
+		).catch(function (err) {
+			console.log("can't upload image: " + err);
+		});
+	}
+
+	function showOriginalImage(file) {
+		document.getElementById('cont').innerHTML = "";
+		const img = document.createElement("img");
+		img.classList.add("obj");
+		img.file = file;
+		img.height = 500;
+		img.class = "img-fluid";
+		document.getElementById('cont').appendChild(img);
+		const reader = new FileReader();
+		reader.onload = (function (aImg) {
+			return function (e) {
+				aImg.src = e.target.result;
+			};
+		})(img);
+		reader.readAsDataURL(file);
+	}
+
+
+</script>
+
+</html>
